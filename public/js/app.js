@@ -100,25 +100,25 @@ window.require.register("scripts/app", function(exports, require, module) {
       }), new Channel({
         id: 'bass',
         threshold: 0.01,
-        frequency: [30, 31]
+        frequency: 30
       }, {
         app: app
       }), new Channel({
         id: 'snare',
         threshold: 0.005,
-        frequency: [200, 210]
+        frequency: 200
       }, {
         app: app
       }), new Channel({
         id: 'hat',
         threshold: 0.002,
-        frequency: [400, 410]
+        frequency: 400
       }, {
         app: app
       }), new Channel({
         id: 'treble',
         threshold: 0.001,
-        frequency: [500, 510]
+        frequency: 500
       }, {
         app: app
       })
@@ -157,20 +157,28 @@ window.require.register("scripts/models/channel", function(exports, require, mod
     Channel.prototype.defaults = function() {
       return {
         threshold: 0.3,
-        frequency: [0, 10]
+        frequency: 0,
+        frequencyRange: 10
       };
     };
 
     Channel.prototype.initialize = function(attrs, options) {
+      var _this = this;
       this.options = options != null ? options : {};
       this.app = this.options.app;
       this.kick = this.app.dancer.createKick({
-        threshold: this.get('threshold'),
-        frequency: this.get('frequency'),
         onKick: _.bind(this.onKick, this),
         offKick: _.bind(this.offKick, this)
       });
-      return this.kick.on();
+      this.kick.on();
+      this.on('change:threshold', function() {
+        return _this.kick.threshold = _this.get('threshold');
+      });
+      this.on('change:frequency change:frequencyRange', function() {
+        return _this.kick.frequency = [_this.get('frequency'), _this.get('frequency') + _this.get('frequencyRange')];
+      });
+      this.trigger('change:threshold');
+      return this.trigger('change:frequency');
     };
 
     Channel.prototype.onKick = function(mag) {
@@ -204,6 +212,33 @@ window.require.register("scripts/views/channel", function(exports, require, modu
     }
 
     ChannelView.prototype.template = template;
+
+    ChannelView.prototype.events = {
+      'change .threshold': function() {
+        this.model.set('threshold', parseFloat(this.$('.threshold').val()));
+        return this.$("[data-value-for='threshold']").val(this.model.get('threshold'));
+      },
+      'change [data-value-for="threshold"]': function() {
+        this.model.set('threshold', parseFloat(this.$("[data-value-for='threshold']").val()));
+        return this.$('.threshold').val(this.model.get('threshold'));
+      },
+      'change .frequency': function() {
+        this.model.set('frequency', parseFloat(this.$('.frequency').val()));
+        return this.$("[data-value-for='frequency']").val(this.model.get('frequency'));
+      },
+      'change [data-value-for="frequency"]': function() {
+        this.model.set('frequency', parseFloat(this.$("[data-value-for='frequency']").val()));
+        return this.$('.frequency').val(this.model.get('frequency'));
+      },
+      'change .frequencyRange': function() {
+        this.model.set('frequencyRange', parseFloat(this.$('.frequencyRange').val()));
+        return this.$("[data-value-for='frequencyRange']").val(this.model.get('frequencyRange'));
+      },
+      'change [data-value-for="frequencyRange"]': function() {
+        this.model.set('frequencyRange', parseFloat(this.$("[data-value-for='frequencyRange']").val()));
+        return this.$('.frequencyRange').val(this.model.get('frequencyRange'));
+      }
+    };
 
     ChannelView.prototype.initialize = function(options) {
       if (options == null) {

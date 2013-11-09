@@ -1,14 +1,26 @@
+html, body {
+  font-family: "Helvetica", sans-serif;
+  padding: 0;
+  margin: 0; }
+
+div {
+  box-sizing: border-box; }
+
 #channels {
   background: #333333;
   padding: 10px;
-  overflow: hidden; }
+  overflow: hidden;
+  color: white; }
   #channels .channel {
     background: grey;
     width: 100px;
-    height: 100px;
+    padding: 10px;
     border: 2px solid grey;
     float: left;
     margin-right: 10px; }
     #channels .channel.on {
       background: blue;
       border: 2px solid yellow; }
+    #channels .channel input {
+      display: block;
+      width: 100%; }

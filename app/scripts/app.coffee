@@ -8,10 +8,10 @@ init = ->
 
   channels = [
     new Channel {id: 'kick'}, app: app
-    new Channel {id: 'bass', threshold: 0.01, frequency: [30, 31]}, app: app
-    new Channel {id: 'snare', threshold: 0.005, frequency: [200, 210]}, app: app
-    new Channel {id: 'hat', threshold: 0.002, frequency: [400, 410]}, app: app
-    new Channel {id: 'treble', threshold: 0.001, frequency: [500, 510]}, app: app
+    new Channel {id: 'bass', threshold: 0.01, frequency: 30}, app: app
+    new Channel {id: 'snare', threshold: 0.005, frequency: 200}, app: app
+    new Channel {id: 'hat', threshold: 0.002, frequency: 400}, app: app
+    new Channel {id: 'treble', threshold: 0.001, frequency: 500}, app: app
   ]
 
   for channel in channels
