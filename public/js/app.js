@@ -80,44 +80,54 @@
 })();
 
 window.require.register("scripts/app", function(exports, require, module) {
-  var Channel, audio, dancer, snare;
+  var init;
 
-  window.dancer = dancer = new Dancer();
+  init = function() {
+    var Channel, audio, dancer, kick, snare;
+    window.dancer = dancer = new Dancer();
+    audio = document.getElementById('audio');
+    Channel = (function() {
+      Channel.prototype.threshold = 0.3;
 
-  audio = document.getElementById('audio');
+      Channel.prototype.frequency = [0, 10];
 
-  Channel = (function() {
-    Channel.prototype.threshold = 0.3;
+      function Channel(options) {
+        this.options = options;
+        this.id = this.options.id;
+        this.$el = $("#" + this.id);
+        this.kick = dancer.createKick({
+          threshold: this.options.threshold,
+          frequency: this.options.frequency,
+          onKick: _.bind(this.onKick, this),
+          offKick: _.bind(this.offKick, this)
+        });
+        this.kick.on();
+      }
 
-    Channel.prototype.frequency = [0, 10];
+      Channel.prototype.onKick = function(mag) {
+        return this.$el.addClass('on');
+      };
 
-    function Channel(options) {
-      this.options = options;
-      this.kick = dancer.createKick({
-        threshold: this.threshold,
-        frequency: this.frequency,
-        onKick: function(mag) {
-          return console.log('kick@ ', mag);
-        },
-        offKick: function(mag) {}
-      });
-      this.kick.on();
-    }
+      Channel.prototype.offKick = function(mag) {
+        return this.$el.removeClass('on');
+      };
 
-    return Channel;
+      return Channel;
 
-  })();
+    })();
+    kick = window.kick = new Channel({
+      id: 'kick'
+    });
+    snare = window.snare = new Channel({
+      id: 'snare',
+      threshold: 0.005,
+      frequency: [200, 210]
+    });
+    dancer.between(0, 60, function() {});
+    dancer.load(audio);
+    return dancer.play();
+  };
 
-  snare = new Channel(id('snare'));
-
-  dancer.between(0, 60, function() {});
-
-  dancer.load(audio);
-
-  dancer.play();
-  
-});
-window.require.register("scripts/test", function(exports, require, module) {
-  
+  jQuery(init);
   
 });
