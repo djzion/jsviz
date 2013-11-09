@@ -1,35 +1,31 @@
+Channel = require 'scripts/models/channel'
+ChannelView = require 'scripts/views/channel'
+app = {}
+
 init = ->
-  window.dancer = dancer = new Dancer()
+  app.dancer = dancer = new Dancer()
   audio = document.getElementById('audio')
 
-  class Channel
-    threshold: 0.3
-    frequency: [0, 10]
+  channels = [
+    new Channel {id: 'kick'}, app: app
+    new Channel {id: 'bass', threshold: 0.01, frequency: [30, 31]}, app: app
+    new Channel {id: 'snare', threshold: 0.005, frequency: [200, 210]}, app: app
+    new Channel {id: 'hat', threshold: 0.002, frequency: [400, 410]}, app: app
+    new Channel {id: 'treble', threshold: 0.001, frequency: [500, 510]}, app: app
+  ]
 
-    constructor: (@options) ->
-      @id = @options.id
-      @$el = $("##{@id}")
-      @kick = dancer.createKick
-        threshold: @options.threshold
-        frequency: @options.frequency
-        onKick: _.bind(@onKick, @)
-        offKick: _.bind(@offKick, @)
-      @kick.on()
+  for channel in channels
+    channel.view = new ChannelView model: channel
+    $('#channels').append channel.view.render().$el
 
-    onKick: (mag) ->
-      @$el.addClass 'on'
-
-    offKick: (mag) ->
-      @$el.removeClass 'on'
-
-  kick = window.kick = new Channel id: 'kick'
-  snare = window.snare = new Channel id: 'snare', threshold: 0.005, frequency: [200, 210]
+  app.channels = channels
 
   dancer.between 0, 60, ->
     #console.log @getFrequency(400)
-
 
   dancer.load audio
   dancer.play()
 
 jQuery init
+
+module.exports = app
