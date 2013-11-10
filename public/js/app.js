@@ -101,7 +101,7 @@ Channels = require('scripts/models/channels');
 
 ChannelView = require('scripts/views/channel');
 
-Visuals = require('scripts/views/visuals');
+Visuals = require('scripts/views/visuals.2d');
 
 App = (function(_super) {
   __extends(App, _super);
@@ -357,6 +357,85 @@ ChannelView = (function(_super) {
 })(Backbone.View);
 
 module.exports = ChannelView;
+
+});
+
+;require.register("scripts/views/visuals.2d", function(exports, require, module) {
+var HEIGHT, Visuals2D, WIDTH, _ref,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+WIDTH = 640;
+
+HEIGHT = 480;
+
+Visuals2D = (function(_super) {
+  __extends(Visuals2D, _super);
+
+  function Visuals2D() {
+    _ref = Visuals2D.__super__.constructor.apply(this, arguments);
+    return _ref;
+  }
+
+  Visuals2D.prototype.el = '#visuals';
+
+  Visuals2D.prototype.sprites = [];
+
+  Visuals2D.prototype.initialize = function() {
+    var _this = this;
+    this.renderer = PIXI.autoDetectRenderer(WIDTH, HEIGHT);
+    this.stage = new PIXI.Stage();
+    return this.model.on('note:on:kick', function(mag) {
+      var sprite;
+      sprite = _this.addSprite();
+      sprite.x *= mag;
+      return sprite.y += mag;
+    });
+  };
+
+  Visuals2D.prototype.initGraphics = function() {
+    this.graphics = new PIXI.Graphics();
+    this.graphics.lineStyle(10, 0xffd900, 1);
+    this.stage.addChild(this.graphics);
+    this.graphics.beginFill(0xFF700B, 1);
+    return this.graphics.drawRect(this.x, 10, 100, 100);
+  };
+
+  Visuals2D.prototype.addSprite = function() {
+    var sprite;
+    sprite = PIXI.Sprite.fromImage('/img/quartz.jpg');
+    sprite.position.x = Math.random() * WIDTH;
+    sprite.position.y = Math.random() * HEIGHT;
+    sprite.width = 100;
+    sprite.height = 100;
+    this.stage.addChild(sprite);
+    return this.sprites.push(sprite);
+  };
+
+  Visuals2D.prototype.updateSprites = function() {
+    var sprite, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = sprites.length; _i < _len; _i++) {
+      sprite = sprites[_i];
+      _results.push(sprite.alpha *= 0.99);
+    }
+    return _results;
+  };
+
+  Visuals2D.prototype.render = function() {
+    return this.$el.append(this.renderer.view);
+  };
+
+  Visuals2D.prototype.redraw = function() {
+    this.updateSprites();
+    return this.renderer.render(this.stage);
+  };
+
+  return Visuals2D;
+
+})(Backbone.View);
+
+module.exports = Visuals2D;
 
 });
 

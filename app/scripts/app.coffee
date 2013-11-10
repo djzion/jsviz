@@ -1,7 +1,7 @@
 Channel = require 'scripts/models/channel'
 Channels = require 'scripts/models/channels'
 ChannelView = require 'scripts/views/channel'
-Visuals = require 'scripts/views/visuals'
+Visuals = require 'scripts/views/visuals.2d'
 
 class App extends Backbone.Model
 
