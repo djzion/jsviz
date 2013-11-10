@@ -6,8 +6,7 @@ exports.config =
         'js/vendor.js': /^vendor/
       order:
         before: [
-          'vendor/scripts/require.js'
-          'vendor/scripts/dancer.js'
+          'vendor/scripts/underscore.js'
         ]
 
     stylesheets:
