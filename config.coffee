@@ -7,6 +7,7 @@ exports.config =
       order:
         before: [
           'vendor/scripts/underscore.js'
+          'vendor/scripts/backbone.js'
         ]
 
     stylesheets:

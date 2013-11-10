@@ -24,6 +24,9 @@ class ChannelView extends Backbone.View
       @model.set 'frequencyRange', parseFloat(@$("[data-value-for='frequencyRange']").val())
       @$('.frequencyRange').val @model.get('frequencyRange')
 
+    'change [data-value-for="name"]': (evt) ->
+      @model.set 'name', $(evt.currentTarget).val()
+
   initialize: (options={}) ->
     @listenTo @model, 'kick:on', @onKick
     @listenTo @model, 'kick:off', @offKick

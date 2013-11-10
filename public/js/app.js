@@ -91,63 +91,105 @@
   globals.require.brunch = true;
 })();
 require.register("scripts/app", function(exports, require, module) {
-var Channel, ChannelView, app, init;
+var App, Channel, ChannelView, Channels, Visuals, app, _ref,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 Channel = require('scripts/models/channel');
 
+Channels = require('scripts/models/channels');
+
 ChannelView = require('scripts/views/channel');
 
-app = {};
+Visuals = require('scripts/views/visuals');
 
-init = function() {
-  var audio, channel, channels, dancer, _i, _len;
-  app.dancer = dancer = new Dancer();
-  audio = document.getElementById('audio');
-  channels = [
-    new Channel({
-      id: 'kick'
-    }, {
-      app: app
-    }), new Channel({
-      id: 'bass',
-      threshold: 0.01,
-      frequency: 30
-    }, {
-      app: app
-    }), new Channel({
-      id: 'snare',
-      threshold: 0.005,
-      frequency: 200
-    }, {
-      app: app
-    }), new Channel({
-      id: 'hat',
-      threshold: 0.002,
-      frequency: 400
-    }, {
-      app: app
-    }), new Channel({
-      id: 'treble',
-      threshold: 0.001,
-      frequency: 500
-    }, {
-      app: app
-    })
-  ];
-  for (_i = 0, _len = channels.length; _i < _len; _i++) {
-    channel = channels[_i];
-    channel.view = new ChannelView({
-      model: channel
-    });
-    $('#channels').append(channel.view.render().$el);
+App = (function(_super) {
+  __extends(App, _super);
+
+  function App() {
+    _ref = App.__super__.constructor.apply(this, arguments);
+    return _ref;
   }
-  app.channels = channels;
-  dancer.between(0, 60, function() {});
-  dancer.load(audio);
-  return dancer.play();
-};
 
-jQuery(init);
+  App.prototype.init = function() {
+    var audio, dancer, onTick,
+      _this = this;
+    this.dancer = dancer = new Dancer();
+    audio = document.getElementById('audio');
+    this.channels = new Channels([], {
+      app: this
+    });
+    this.channels.each(function(channel) {
+      channel.view = new ChannelView({
+        model: channel
+      });
+      return $('#channels').append(channel.view.render().$el);
+    });
+    this.load();
+    this.visuals = new Visuals({
+      model: this
+    });
+    this.visuals.render();
+    onTick = function() {
+      _this.visuals.redraw();
+      return window.requestAnimationFrame(onTick);
+    };
+    window.requestAnimationFrame(onTick);
+    dancer.load(audio);
+    return dancer.play();
+  };
+
+  App.prototype["new"] = function() {
+    return this.channels.reset([
+      new Channel({
+        name: 'kick'
+      }), new Channel({
+        name: 'bass',
+        threshold: 0.01,
+        frequency: 30
+      }), new Channel({
+        name: 'snare',
+        threshold: 0.005,
+        frequency: 200
+      }), new Channel({
+        name: 'hat',
+        threshold: 0.002,
+        frequency: 400
+      }), new Channel({
+        name: 'treble',
+        threshold: 0.001,
+        frequency: 500
+      })
+    ]);
+  };
+
+  App.prototype.save = function() {
+    return this.channels.each(function(channel) {
+      return channel.save();
+    });
+  };
+
+  App.prototype.load = function() {
+    var _this = this;
+    return this.channels.fetch().then(function() {
+      return _this.channels.each(function(channel) {
+        channel.view = new ChannelView({
+          model: channel
+        });
+        return $('#channels').append(channel.view.render().$el);
+      });
+    });
+  };
+
+  return App;
+
+})(Backbone.Model);
+
+app = new App;
+
+jQuery(function() {
+  return app.init();
+});
 
 module.exports = app;
 
@@ -177,7 +219,7 @@ Channel = (function(_super) {
   Channel.prototype.initialize = function(attrs, options) {
     var _this = this;
     this.options = options != null ? options : {};
-    this.app = this.options.app;
+    this.app = this.collection.options.app;
     this.kick = this.app.dancer.createKick({
       onKick: _.bind(this.onKick, this),
       offKick: _.bind(this.offKick, this)
@@ -194,11 +236,13 @@ Channel = (function(_super) {
   };
 
   Channel.prototype.onKick = function(mag) {
-    return this.trigger('kick:on', mag);
+    this.trigger('kick:on', mag);
+    return this.app.trigger("note:on:" + (this.get('name')), mag);
   };
 
   Channel.prototype.offKick = function(mag) {
-    return this.trigger('kick:off', mag);
+    this.trigger('kick:off', mag);
+    return this.app.trigger("note:off:" + (this.get('name')), mag);
   };
 
   return Channel;
@@ -206,6 +250,37 @@ Channel = (function(_super) {
 })(Backbone.Model);
 
 module.exports = Channel;
+
+});
+
+;require.register("scripts/models/channels", function(exports, require, module) {
+var Channel, Channels, _ref,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+Channel = require('./channel');
+
+Channels = (function(_super) {
+  __extends(Channels, _super);
+
+  function Channels() {
+    _ref = Channels.__super__.constructor.apply(this, arguments);
+    return _ref;
+  }
+
+  Channels.prototype.model = Channel;
+
+  Channels.prototype.localStorage = new Backbone.LocalStorage("Channels");
+
+  Channels.prototype.initialize = function(models, options) {
+    this.options = options;
+  };
+
+  return Channels;
+
+})(Backbone.Collection);
+
+module.exports = Channels;
 
 });
 
@@ -250,6 +325,9 @@ ChannelView = (function(_super) {
     'change [data-value-for="frequencyRange"]': function() {
       this.model.set('frequencyRange', parseFloat(this.$("[data-value-for='frequencyRange']").val()));
       return this.$('.frequencyRange').val(this.model.get('frequencyRange'));
+    },
+    'change [data-value-for="name"]': function(evt) {
+      return this.model.set('name', $(evt.currentTarget).val());
     }
   };
 
@@ -279,6 +357,65 @@ ChannelView = (function(_super) {
 })(Backbone.View);
 
 module.exports = ChannelView;
+
+});
+
+;require.register("scripts/views/visuals", function(exports, require, module) {
+var HEIGHT, Visuals, WIDTH, _ref,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+WIDTH = 640;
+
+HEIGHT = 480;
+
+Visuals = (function(_super) {
+  __extends(Visuals, _super);
+
+  function Visuals() {
+    _ref = Visuals.__super__.constructor.apply(this, arguments);
+    return _ref;
+  }
+
+  Visuals.prototype.el = '#visuals';
+
+  Visuals.prototype.initialize = function() {
+    var radius, rings, segments,
+      _this = this;
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera();
+    this.renderer = new THREE.WebGLRenderer();
+    this.scene.add(this.camera);
+    radius = 50;
+    segments = 16;
+    rings = 16;
+    this.sphereMaterial = new THREE.MeshLambertMaterial({
+      color: 0xCC0000
+    });
+    this.sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, segments, rings), this.sphereMaterial);
+    this.sphere.geometry.dynamic = true;
+    this.scene.add(this.sphere);
+    return this.model.on('note:on:kick', function() {
+      return _this.camera.rotation.x += 0.1;
+    });
+  };
+
+  Visuals.prototype.render = function() {
+    this.camera.position.z = 300;
+    this.renderer.setSize(WIDTH, HEIGHT);
+    this.$el.append(this.renderer.domElement);
+    return this.renderer.render(this.scene, this.camera);
+  };
+
+  Visuals.prototype.redraw = function() {
+    return this.renderer.render(this.scene, this.camera);
+  };
+
+  return Visuals;
+
+})(Backbone.View);
+
+module.exports = Visuals;
 
 });
 

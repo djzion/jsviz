@@ -1,31 +1,53 @@
 Channel = require 'scripts/models/channel'
+Channels = require 'scripts/models/channels'
 ChannelView = require 'scripts/views/channel'
-app = {}
+Visuals = require 'scripts/views/visuals'
 
-init = ->
-  app.dancer = dancer = new Dancer()
-  audio = document.getElementById('audio')
+class App extends Backbone.Model
 
-  channels = [
-    new Channel {id: 'kick'}, app: app
-    new Channel {id: 'bass', threshold: 0.01, frequency: 30}, app: app
-    new Channel {id: 'snare', threshold: 0.005, frequency: 200}, app: app
-    new Channel {id: 'hat', threshold: 0.002, frequency: 400}, app: app
-    new Channel {id: 'treble', threshold: 0.001, frequency: 500}, app: app
-  ]
+  init: ->
+    @dancer = dancer = new Dancer()
+    audio = document.getElementById('audio')
 
-  for channel in channels
-    channel.view = new ChannelView model: channel
-    $('#channels').append channel.view.render().$el
+    @channels = new Channels([], app: @)
+    @channels.each (channel) ->
+      channel.view = new ChannelView model: channel
+      $('#channels').append channel.view.render().$el
 
-  app.channels = channels
+    @load()
+    @visuals = new Visuals model: @
+    @visuals.render()
 
-  dancer.between 0, 60, ->
-    #console.log @getFrequency(400)
+    onTick = =>
+      @visuals.redraw()
+      window.requestAnimationFrame onTick
+    window.requestAnimationFrame onTick
 
-  dancer.load audio
-  dancer.play()
+    dancer.load audio
+    dancer.play()
 
-jQuery init
+  new: ->
+    @channels.reset([
+      new Channel {name: 'kick'}
+      new Channel {name: 'bass', threshold: 0.01, frequency: 30}
+      new Channel {name: 'snare', threshold: 0.005, frequency: 200}
+      new Channel {name: 'hat', threshold: 0.002, frequency: 400}
+      new Channel {name: 'treble', threshold: 0.001, frequency: 500}
+    ])
+
+  save: ->
+    @channels.each (channel) ->
+      channel.save()
+
+  load: ->
+    @channels.fetch().then =>
+      @channels.each (channel) ->
+        channel.view = new ChannelView model: channel
+        $('#channels').append channel.view.render().$el
+
+app = new App
+
+jQuery ->
+  app.init()
 
 module.exports = app

@@ -6,7 +6,7 @@ class Channel extends Backbone.Model
     frequencyRange: 10
 
   initialize: (attrs, @options={}) ->
-    @app = @options.app
+    @app = @collection.options.app
     @kick = @app.dancer.createKick
       onKick: _.bind(@onKick, @)
       offKick: _.bind(@offKick, @)
@@ -21,8 +21,10 @@ class Channel extends Backbone.Model
 
   onKick: (mag) ->
     @trigger 'kick:on', mag
+    @app.trigger "note:on:#{@get('name')}", mag
 
   offKick: (mag) ->
     @trigger 'kick:off', mag
+    @app.trigger "note:off:#{@get('name')}", mag
 
 module.exports = Channel
